@@ -18,11 +18,14 @@ This application tracks Boston Red Sox player statistics with a focus on offensi
 
 ## How to Use
 
-1. Start the server with `node server.improved.js` or `npm start`
+1. Navigare to https://a2-ethanknorring.onrender.com/ 
+2. View current player statistics in the table
+3. Add new players using the form
+4. Edit or delete existing players using the buttons in the table
+
+Alternatively,
+1. Start the server with `node server.improved.js` or `npm start` 
 2. Open your browser to `http://localhost:3000`
-3. View current player statistics in the table
-4. Add new players using the form
-5. Edit or delete existing players using the buttons in the table
 
 The application calculates OPS as a derived field based on the player's on-base percentage (OBP) and slugging percentage (SLG), providing a comprehensive measure of a player's offensive performance.
 
@@ -36,3 +39,14 @@ The application calculates OPS as a derived field based on the player's on-base 
 - **CSS**: Element, ID, and class selectors; Flexbox layout; web fonts; external stylesheet
 - **JavaScript**: Front-end code to get/fetch data from the server
 - **Node.js**: HTTP server that delivers files and calculates derived fields
+
+# AI Usage Statement
+ChatGPT was used as a resource in the same way as Google or other online documentation.
+Specifically, I asked for:
+
+- Clarification of the assignment requirements.
+- Examples of how to structure my index.html with semantic HTML, CSS, and JavaScript.
+- Ideas for how to implement the technical and design achievements
+
+I reviewed and edited all generated examples to make sure I understood them and that they met the assignment requirements.
+All final code and design choices were my own.
