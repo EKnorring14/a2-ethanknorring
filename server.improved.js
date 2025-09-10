@@ -1,74 +1,106 @@
-const http = require( "http" ),
-      fs   = require( "fs" ),
-      // IMPORTANT: you must run `npm install` in the directory for this assignment
-      // to install the mime library if you"re testing this on your local machine.
-      // However, Glitch will install it automatically by looking in your package.json
-      // file.
-      mime = require( "mime" ),
+const http = require("http"),
+      fs   = require("fs"),
+      mime = require("mime"),
       dir  = "public/",
-      port = 3000
+      port = 3000;
 
-const appdata = [
-  { "model": "toyota", "year": 1999, "mpg": 23 },
-  { "model": "honda", "year": 2004, "mpg": 30 },
-  { "model": "ford", "year": 1987, "mpg": 14} 
-]
+// Red Sox player data with derived field (OPS - On-base Plus Slugging)
+let players = [
+  { id: 1, name: "Rafael Devers", position: "3B", avg: 0.285, obp: 0.352, slg: 0.524, ops: 0.876 },
+  { id: 2, name: "Xander Bogaerts", position: "SS", avg: 0.295, obp: 0.367, slg: 0.493, ops: 0.860 },
+  { id: 3, name: "J.D. Martinez", position: "DH", avg: 0.286, obp: 0.349, slg: 0.518, ops: 0.867 }
+];
 
-const server = http.createServer( function( request,response ) {
-  if( request.method === "GET" ) {
-    handleGet( request, response )    
-  }else if( request.method === "POST" ){
-    handlePost( request, response ) 
+const server = http.createServer(function(request, response) {
+  if (request.method === "GET") {
+    handleGet(request, response);
+  } else if (request.method === "POST") {
+    handlePost(request, response);
+  } else if (request.method === "PUT") {
+    handlePut(request, response);
+  } else if (request.method === "DELETE") {
+    handleDelete(request, response);
   }
-})
+});
 
-const handleGet = function( request, response ) {
-  const filename = dir + request.url.slice( 1 ) 
+const handleGet = function(request, response) {
+  const filename = dir + request.url.slice(1);
 
-  if( request.url === "/" ) {
-    sendFile( response, "public/index.html" )
-  }else{
-    sendFile( response, filename )
+  if (request.url === "/") {
+    sendFile(response, "public/index.html");
+  } else if (request.url === "/players") {
+    response.writeHead(200, "OK", { "Content-Type": "application/json" });
+    response.end(JSON.stringify(players));
+  } else {
+    sendFile(response, filename);
   }
-}
+};
 
-const handlePost = function( request, response ) {
-  let dataString = ""
+const handlePost = function(request, response) {
+  let dataString = "";
 
-  request.on( "data", function( data ) {
-      dataString += data 
-  })
+  request.on("data", function(data) {
+    dataString += data;
+  });
 
-  request.on( "end", function() {
-    console.log( JSON.parse( dataString ) )
+  request.on("end", function() {
+    const newPlayer = JSON.parse(dataString);
+    
+    // Server logic: Calculate OPS (derived field)
+    newPlayer.ops = (parseFloat(newPlayer.obp) + parseFloat(newPlayer.slg)).toFixed(3);
+    newPlayer.id = players.length > 0 ? Math.max(...players.map(p => p.id)) + 1 : 1;
+    
+    players.push(newPlayer);
+    
+    response.writeHead(200, "OK", { "Content-Type": "application/json" });
+    response.end(JSON.stringify(players));
+  });
+};
 
-    // ... do something with the data here!!!
+const handlePut = function(request, response) {
+  let dataString = "";
 
-    response.writeHead( 200, "OK", {"Content-Type": "text/plain" })
-    response.end("test")
-  })
-}
+  request.on("data", function(data) {
+    dataString += data;
+  });
 
-const sendFile = function( response, filename ) {
-   const type = mime.getType( filename ) 
+  request.on("end", function() {
+    const updatedPlayer = JSON.parse(dataString);
+    
+    // Server logic: Recalculate OPS (derived field)
+    updatedPlayer.ops = (parseFloat(updatedPlayer.obp) + parseFloat(updatedPlayer.slg)).toFixed(3);
+    
+    const index = players.findIndex(p => p.id === updatedPlayer.id);
+    if (index !== -1) {
+      players[index] = updatedPlayer;
+    }
+    
+    response.writeHead(200, "OK", { "Content-Type": "application/json" });
+    response.end(JSON.stringify(players));
+  });
+};
 
-   fs.readFile( filename, function( err, content ) {
+const handleDelete = function(request, response) {
+  const playerId = parseInt(request.url.split("/").pop());
+  
+  players = players.filter(player => player.id !== playerId);
+  
+  response.writeHead(200, "OK", { "Content-Type": "application/json" });
+  response.end(JSON.stringify(players));
+};
 
-     // if the error = null, then we"ve loaded the file successfully
-     if( err === null ) {
+const sendFile = function(response, filename) {
+  const type = mime.getType(filename);
 
-       // status code: https://httpstatuses.com
-       response.writeHeader( 200, { "Content-Type": type })
-       response.end( content )
+  fs.readFile(filename, function(err, content) {
+    if (err === null) {
+      response.writeHeader(200, { "Content-Type": type });
+      response.end(content);
+    } else {
+      response.writeHeader(404);
+      response.end("404 Error: File Not Found");
+    }
+  });
+};
 
-     }else{
-
-       // file not found, error code 404
-       response.writeHeader( 404 )
-       response.end( "404 Error: File Not Found" )
-
-     }
-   })
-}
-
-server.listen( process.env.PORT || port )
+server.listen(process.env.PORT || port);
